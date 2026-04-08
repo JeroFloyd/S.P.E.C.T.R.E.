@@ -10,8 +10,12 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "openai",
-    "pandas"
+    "pandas",
+    "openenv-core>=0.2.0"
 ]
+
+[project.scripts]
+spectre-server = "app:app"
 
 [build-system]
 requires = ["setuptools", "wheel"]
