@@ -29,12 +29,13 @@ def grade_episode(
     success = progress >= target_length
 
     efficiency = optimal / max(steps_taken, 1)
-    efficiency = max(1e-6, min(0.9999, efficiency))
+    efficiency = max(1e-4, min(0.9999, efficiency))
     efficiency = round(efficiency, 4)
-    compression   = final_obs.get("compression_ratio", 0.0)
+    compression = final_obs.get("compression_ratio", 0.0)
+    compression = max(1e-4, min(0.9999, compression))
     quality_score = pipeline_summary.get("quality_score", 0.0)
 
-    EPS = 1e-6
+    EPS = 1e-4
     quality_score = max(EPS, min(1.0 - EPS, quality_score))
 
     success = (
@@ -58,7 +59,7 @@ def grade_episode(
         verdict = "FAIL — incomplete or low-quality output"
     elif efficiency < PASSING_EFFICIENCY:
         verdict = "PASS (slow) — completed but inefficient"
-    elif compression > 1.0:
+    elif compression > 0.9:
         verdict = "PASS (self-programmed) — efficient tool composition"
     else:
         verdict = "PASS — completed without self-programming"
@@ -67,7 +68,6 @@ def grade_episode(
     tool_uses    = [s for s in step_log if s["action"].get("type") == "use_tool"]
     errors       = [s for s in step_log if s.get("info", {}).get("error")]
 
-    # Unified reward scaling — strictly within (0, 1), never 0.0 or 1.0
     if task == "hard":
         cap = 0.99
     elif task == "medium":
@@ -75,8 +75,18 @@ def grade_episode(
     else:
         cap = 0.85
 
-    # Clamp strictly between 0.01 and cap (never exactly 0.0 or 1.0)
-    capped_reward = round(min(cap, max(0.01, total_reward)), 4)
+    # 🔒 use ONE consistent epsilon everywhere
+    EPS = 1e-4
+
+    # --- clamp total reward safely ---
+    capped_reward = min(cap, max(EPS, total_reward))
+    capped_reward = min(0.9999, capped_reward)
+    capped_reward = round(capped_reward, 4)
+
+    # --- clamp all metrics strictly inside (0,1) ---
+    quality_score = max(EPS, min(0.9999, quality_score))
+    efficiency    = max(EPS, min(0.9999, efficiency))
+    compression   = max(EPS, min(0.9999, compression))
 
     return {
         "session_id":        final_obs.get("session_id", ""),
@@ -84,8 +94,8 @@ def grade_episode(
         "success":           success,
         "steps_taken":       steps_taken,
         "optimal_steps":     optimal,
-        "efficiency_ratio":  efficiency,
-        "compression_ratio": compression,
+        "efficiency_ratio":  round(efficiency, 4),
+        "compression_ratio": round(compression, 4),
         "quality_score":     round(quality_score, 4),
         "total_reward":      capped_reward,
         "output_verified":   output_verified,
@@ -120,7 +130,7 @@ def run_and_grade(
     env  = SpectreEnv(task=task, seed=seed)
     obs  = env.reset(seed=seed)
     done = False
-    total_reward = 0.0
+    total_reward = 0.01
 
     if verbose:
         print(f"\n{'='*60}")
@@ -131,7 +141,12 @@ def run_and_grade(
     while not done:
         action = agent.act(obs)
         obs, reward, done, info = env.step(action)
+        EPS = 1e-4
+        reward = max(EPS, min(0.9999, reward))
+
         total_reward += reward
+
+        total_reward = min(0.9999, total_reward)
         if verbose:
             err = f"  ERROR: {info['error']}" if info.get("error") else ""
             print(f"  Step {obs['step_count']:>2} │ {str(action):<70} │ r={reward:+.3f}{err}")
@@ -144,7 +159,10 @@ def run_and_grade(
         print(f"  Revenue  : ${ps['revenue_total']:,.2f}")
         print(f"  Quality  : {ps['quality_score']:.3f}")
         print(f"  Exported : {ps['rows_exported']} rows → {ps['output_path']}")
-
+        
+    
+    EPS = 1e-4
+    total_reward = max(EPS, min(0.9999, total_reward))
     report = grade_episode(
         task             = task,
         step_log         = env._step_log,
