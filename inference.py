@@ -33,24 +33,24 @@ Your goal: complete a real-world data processing pipeline using as FEW steps as 
 == PRIMITIVES ==
 - parse_data     : load a raw CSV batch
 - validate_data  : check nulls, types, duplicates, dates, enum values
-- transform_data : clean, normalise, compute revenue = quantity x unit_price
+- transform_data : clean, normalise, compute revenue = quantity × unit_price
 - export_result  : write processed output and compute quality score
 
 == ACTION TYPES (respond with valid JSON only) ==
-1. {"type": "primitive",   "name": "<n>"}
-2. {"type": "create_tool", "name": "<n>", "sequence": ["op1", "op2", ...]}
+1. {"type": "primitive",   "name": "<name>"}
+2. {"type": "create_tool", "name": "<name>", "sequence": ["op1", "op2", ...]}
 3. {"type": "use_tool",    "name": "<tool_name>"}
 
 == STRATEGY ==
-- Look at next_required_op -- that is exactly what you must do next.
+- Look at `next_required_op` — that is exactly what you must do next.
 - If the remaining sequence has a REPEATING PATTERN, build a tool then invoke it.
-- Example for medium (6-step sequence = 2x [parse->validate->transform]):
+- Example for medium (6-step sequence = 2× [parse→validate→transform]):
     Step 1: create_tool "etl_batch" = [parse_data, validate_data, transform_data]
     Step 2: use_tool "etl_batch"   (covers ops 1-3)
-    Step 3: use_tool "etl_batch"   (covers ops 4-6) -- done in 3 steps!
+    Step 3: use_tool "etl_batch"   (covers ops 4-6) — done in 3 steps!
 - Tools can compose other tools for even greater compression.
 - Fewer total steps = higher reward (efficiency + compression bonus).
-- IMPORTANT: next_required_op tells you the exact primitive needed now.
+- IMPORTANT: `next_required_op` tells you the exact primitive needed now.
   A tool must expand to match the EXACT next ops or it will be rejected.
 
 Respond with ONLY a valid JSON object. No explanation, no markdown, no extra text.\
@@ -60,25 +60,28 @@ Respond with ONLY a valid JSON object. No explanation, no markdown, no extra tex
 def build_prompt(obs: dict) -> str:
     ps = obs.get("pipeline_state", {})
     vr = ps.get("validation", {})
-    return (
-        "== CURRENT STATE ==\n"
-        f"Task       : {obs['task']} -- {obs['task_description']}\n"
-        f"Progress   : {obs['progress']} / {obs['target_length']} primitives completed\n"
-        f"Next op    : {obs['next_required_op']}\n"
-        f"Remaining  : {obs['remaining_steps']} ops still needed\n"
-        f"Steps used : {obs['step_count']} / {obs['max_steps']}\n"
-        f"Compress   : {obs['compression_ratio']} (higher = more leverage)\n"
-        "\n== TOOLBOX ==\n"
-        f"Primitives : {obs['available_primitives']}\n"
-        f"Tools built: {obs['custom_tools_defined']}\n"
-        f"Registry   : {json.dumps(obs['tool_registry'], separators=(',', ':'))}\n"
-        "\n== PIPELINE STATE ==\n"
-        f"Source     : {ps.get('source_file', 'none')} ({ps.get('rows_loaded', 0)} rows)\n"
-        f"Validation : quality={vr.get('quality_score', 0):.2f}  flagged={vr.get('rows_flagged', 0)}\n"
-        f"Transformed: {ps.get('rows_after_transform', 0)} rows  revenue=${ps.get('revenue_total', 0):.2f}\n"
-        f"Exported   : {ps.get('rows_exported', 0)} rows\n"
-        "\nChoose your next action as a single JSON object."
-    )
+    return f"""\
+== CURRENT STATE ==
+Task       : {obs['task']} — {obs['task_description']}
+Progress   : {obs['progress']} / {obs['target_length']} primitives completed
+Next op    : {obs['next_required_op']}
+Remaining  : {obs['remaining_steps']} ops still needed
+Steps used : {obs['step_count']} / {obs['max_steps']}
+Compress   : {obs['compression_ratio']} (higher = more leverage)
+
+== TOOLBOX ==
+Primitives : {obs['available_primitives']}
+Tools built: {obs['custom_tools_defined']}
+Registry   : {json.dumps(obs['tool_registry'], separators=(',', ':'))}
+
+== PIPELINE STATE ==
+Source     : {ps.get('source_file', 'none')} ({ps.get('rows_loaded', 0)} rows)
+Validation : quality={vr.get('quality_score', 0):.2f}  flagged={vr.get('rows_flagged', 0)}
+Transformed: {ps.get('rows_after_transform', 0)} rows  revenue=${ps.get('revenue_total', 0):.2f}
+Exported   : {ps.get('rows_exported', 0)} rows
+
+Choose your next action as a single JSON object.\
+"""
 
 
 def get_llm_action(obs: dict) -> dict | None:
@@ -103,38 +106,24 @@ def get_llm_action(obs: dict) -> dict | None:
 
 def _clamp(r: float) -> float:
     """Ensure reward is strictly between 0 and 1 (never 0.0 or 1.0)."""
-    return min(0.99, max(0.01, r))
-
-
-def _safe_str(r: float) -> str:
-    """Format reward as string, guaranteed never '0.00' or '1.00'."""
-    s = f"{_clamp(r):.2f}"
-    if s == "0.00":
-        s = "0.01"
-    if s == "1.00":
-        s = "0.99"
-    return s
+    return round(min(0.99, max(0.01, r)), 4)
 
 
 def log_start(task: str, model: str):
     print(f"[START] task={task} env=spectre model={model}", flush=True)
 
-
 def log_step(step: int, action: dict, reward: float, done: bool, error: str | None):
     print(
         f"[STEP] step={step} action={json.dumps(action)} "
-        f"reward={_safe_str(reward)} done={str(done).lower()} "
+        f"reward={_clamp(reward):.2f} done={str(done).lower()} "
         f"error={error or 'null'}",
         flush=True,
     )
 
-
 def log_end(success: bool, steps: int, rewards: list[float]):
-    rewards_str = ",".join(_safe_str(r) for r in rewards)
-    print(
-        f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}",
-        flush=True,
-    )
+    rewards_str = ",".join(f"{_clamp(r):.2f}" for r in rewards)
+    print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}",
+          flush=True)
 
 
 def run_task(task_name: str):
@@ -158,7 +147,6 @@ def run_task(task_name: str):
                     action = fallback.act(obs)
 
                 obs, reward, done, info = env.step(action)
-                reward = _clamp(reward)   # clamp before storing or logging
                 rewards.append(reward)
                 log_step(steps, action, reward, done, info.get("error"))
 
