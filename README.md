@@ -176,6 +176,13 @@ https://huggingface.co/spaces/JeroFloyd/spectre-env
 
 ---
 
+## ⚡ Key Idea
+
+S.P.E.C.T.R.E trains agents not just to execute tasks, but to **teach the environment how to solve them**.
+
+By building and reusing tools, agents convert repeated workflows into efficient, self-improving systems.
+
+
 ## 🧬 Why This Matters
 
 S.P.E.C.T.R.E is not just another environment.
