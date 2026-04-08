@@ -35,7 +35,7 @@ def compute_reward(
             compression_bonus = 0.10
 
     raw    = step_penalty + progress_bonus + completion_bonus + quality_bonus + compression_bonus
-    reward = round(max(0.0, min(1.0, raw)), 6)
+    reward = round(max(0.01, min(0.99, raw)), 6)
 
     breakdown = {
         "step_penalty":      step_penalty,
