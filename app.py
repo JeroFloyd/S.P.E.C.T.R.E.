@@ -131,7 +131,7 @@ def grade(session_id: str = Path(...)):
         task             = env.task_name,
         step_log         = env._step_log,
         final_obs        = obs,
-        total_reward     = sum(s["reward"] for s in env._step_log),
+        total_reward     = sum(max(0.01, min(0.99, s["reward"])) for s in env._step_log),
         pipeline_summary = env._pipeline.summary(),
     )
     return report
