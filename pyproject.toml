@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-spectre-server = "app:app"
+server = "server.app:app"
 
 [build-system]
 requires = ["setuptools", "wheel"]
