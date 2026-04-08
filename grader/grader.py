@@ -30,7 +30,6 @@ def grade_episode(
 
     efficiency = optimal / max(steps_taken, 1)
     efficiency = max(1e-4, min(0.9999, efficiency))
-    efficiency = round(efficiency, 4)
     compression = final_obs.get("compression_ratio", 0.0)
     compression = max(1e-4, min(0.9999, compression))
     quality_score = pipeline_summary.get("quality_score", 0.0)
@@ -81,22 +80,22 @@ def grade_episode(
     # --- clamp total reward safely ---
     capped_reward = min(cap, max(EPS, total_reward))
     capped_reward = min(0.9999, capped_reward)
-    capped_reward = round(capped_reward, 4)
+    capped_reward = float(f"{capped_reward:.4f}")
 
     # --- clamp all metrics strictly inside (0,1) ---
     quality_score = max(EPS, min(0.9999, quality_score))
     efficiency    = max(EPS, min(0.9999, efficiency))
     compression   = max(EPS, min(0.9999, compression))
-
+    print("DEBUG FINAL:", capped_reward, quality_score, efficiency, compression)
     return {
         "session_id":        final_obs.get("session_id", ""),
         "task":              task,
         "success":           success,
         "steps_taken":       steps_taken,
         "optimal_steps":     optimal,
-        "efficiency_ratio":  round(efficiency, 4),
-        "compression_ratio": round(compression, 4),
-        "quality_score":     round(quality_score, 4),
+        "efficiency_ratio": float(f"{efficiency:.4f}"),
+        "compression_ratio": float(f"{compression:.4f}"),
+        "quality_score": float(f"{quality_score:.4f}"),
         "total_reward":      capped_reward,
         "output_verified":   output_verified,
         "output_hash":       output_hash,
