@@ -31,6 +31,10 @@ class ValidationReport:
     quality_score:       float = 0.0
 
     def to_dict(self) -> dict:
+        EPS = 1e-4
+        safe_q = max(EPS, min(0.9999, float(self.quality_score)))
+        quality_formatted = float(f"{safe_q:.4f}")
+        
         return {
             "total_rows":          self.total_rows,
             "missing_required":    self.missing_required,
@@ -42,7 +46,7 @@ class ValidationReport:
             "rows_flagged":        self.rows_flagged,
             "rows_clean":          self.rows_clean,
             "passed":              self.passed,
-            "quality_score":       round(self.quality_score, 4),
+            "quality_score":       quality_formatted,
         }
 
 @dataclass
@@ -69,7 +73,7 @@ class PipelineState:
     output_path:   str   = ""
     rows_exported: int   = 0
     export_count:  int   = 0
-    quality_score: float = 0.0
+    quality_score: float = 0.01  # Never 0.0 — default to safe minimum
     output_hash:   str   = ""
 
     _batch_files: list = field(default_factory=list)
@@ -92,6 +96,13 @@ class PipelineState:
 
     def summary(self) -> dict:
         vr = self.validation_report.to_dict() if self.validation_report else {}
+        
+        EPS = 1e-4
+        safe_q = max(EPS, min(0.9999, float(self.quality_score)))
+        final_quality = float(f"{safe_q:.4f}")
+        
+        safe_revenue = max(0.01, float(f"{self.revenue_total:.2f}"))
+
         return {
             "source_file":          self.source_file,
             "rows_loaded":          self.rows_loaded,
@@ -99,11 +110,11 @@ class PipelineState:
             "schema_hash":          self.schema_hash,
             "validation":           vr,
             "rows_after_transform": self.rows_after_transform,
-            "revenue_total":        round(self.revenue_total, 2),
+            "revenue_total":        safe_revenue,
             "derived_columns":      self.derived_columns,
             "output_path":          self.output_path,
             "rows_exported":        self.rows_exported,
-            "quality_score":        round(self.quality_score, 4),
+            "quality_score":        final_quality,
             "output_hash":          self.output_hash,
             "parse_count":          self.parse_count,
             "validate_count":       self.validate_count,
@@ -202,7 +213,9 @@ def validate(ps: PipelineState) -> str | None:
         vr.negative_values +
         vr.invalid_dates
     )
-    vr.quality_score = max(0.0, 1.0 - (total_issues / max(vr.total_rows, 1)))
+    # Compute raw quality score and clamp to prevent 0.0 or 1.0
+    raw_quality = max(0.0, 1.0 - (total_issues / max(vr.total_rows, 1)))
+    vr.quality_score = max(0.01, min(0.99, raw_quality))
     vr.passed        = vr.quality_score >= 0.70
 
     ps.validation_report  = vr
