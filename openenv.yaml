@@ -98,6 +98,6 @@ reward:
     compression_bonus: +0.10 if agent used self-programming and step_count < progress.
     Each step reward is clipped to [0.0, 1.0].
   range:
-    - 0.0
-    - 1.0
+    - 0.0001
+    - 0.9999
   partial_progress: true
