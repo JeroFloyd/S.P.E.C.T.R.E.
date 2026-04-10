@@ -47,11 +47,11 @@ class SpectreEnv:
                      if self.progress < len(self.target_sequence) else None)
         EPS = 1e-4
 
-        compression = self.progress / max(self.step_count, 1)
-
-        compression = max(EPS, min(0.9999, compression))
-
-        compression = float(f"{compression:.4f}")
+        if self.progress > 0:
+            compression = 1.0 - (self.step_count / max(self.progress, 1))
+        else:
+            compression = 0.0
+        compression = float(f"{max(EPS, min(0.9999, compression)):.4f}")
 
         return {
             "task":                 self.task_name,
@@ -112,9 +112,6 @@ class SpectreEnv:
             error = str(exc)
 
         done = self.progress >= len(self.target_sequence)
-        if done and self.task_name in ["medium", "hard"]:
-            if self._pipeline.export_count == 0:
-                export(self._pipeline)
         if self.step_count >= self.max_steps:
             done = True
 
