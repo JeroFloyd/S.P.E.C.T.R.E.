@@ -4,7 +4,7 @@ S.P.E.C.T.R.E Inference Script
 OpenEnv-compliant stdout format:
     [START] task=<task> env=spectre model=<model>
     [STEP]  step=<n> action=<action> reward=<0.00> done=<true|false> error=<msg|null>
-    [END]   success=<true|false> steps=<n> rewards=<r1,r2,...>
+    [END]   success=<true|false> steps=<n> score=<0.00>
 """
 from __future__ import annotations
 
@@ -25,62 +25,8 @@ SEED         = int(os.getenv("SPECTRE_SEED", "42"))
 client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY) if API_KEY else None
 
 SYSTEM_PROMPT = """\
-You are an autonomous agent in S.P.E.C.T.R.E — Self-Programming Environment for \
-Complex Task Reconstruction & Evolution.
-
-Your goal: complete a real-world data processing pipeline using as FEW steps as possible.
-
-== PRIMITIVES ==
-- parse_data     : load a raw CSV batch
-- validate_data  : check nulls, types, duplicates, dates, enum values
-- transform_data : clean, normalise, compute revenue = quantity × unit_price
-- export_result  : write processed output and compute quality score
-
-== ACTION TYPES (respond with valid JSON only) ==
-1. {"type": "primitive",   "name": "<name>"}
-2. {"type": "create_tool", "name": "<name>", "sequence": ["op1", "op2", ...]}
-3. {"type": "use_tool",    "name": "<tool_name>"}
-
-== STRATEGY ==
-- Look at `next_required_op` — that is exactly what you must do next.
-- If the remaining sequence has a REPEATING PATTERN, build a tool then invoke it.
-- Example for medium (6-step sequence = 2× [parse→validate→transform]):
-    Step 1: create_tool "etl_batch" = [parse_data, validate_data, transform_data]
-    Step 2: use_tool "etl_batch"   (covers ops 1-3)
-    Step 3: use_tool "etl_batch"   (covers ops 4-6) — done in 3 steps!
-- Tools can compose other tools for even greater compression.
-- Fewer total steps = higher reward (efficiency + compression bonus).
-- IMPORTANT: `next_required_op` tells you the exact primitive needed now.
-  A tool must expand to match the EXACT next ops or it will be rejected.
-
-Respond with ONLY a valid JSON object. No explanation, no markdown, no extra text.\
-"""
-
-
-def build_prompt(obs: dict) -> str:
-    ps = obs.get("pipeline_state", {})
-    vr = ps.get("validation", {})
-    return f"""\
-== CURRENT STATE ==
-Task       : {obs['task']} — {obs['task_description']}
-Progress   : {obs['progress']} / {obs['target_length']} primitives completed
-Next op    : {obs['next_required_op']}
-Remaining  : {obs['remaining_steps']} ops still needed
-Steps used : {obs['step_count']} / {obs['max_steps']}
-Compress   : {obs['compression_ratio']} (higher = more leverage)
-
-== TOOLBOX ==
-Primitives : {obs['available_primitives']}
-Tools built: {obs['custom_tools_defined']}
-Registry   : {json.dumps(obs['tool_registry'], separators=(',', ':'))}
-
-== PIPELINE STATE ==
-Source     : {ps.get('source_file', 'none')} ({ps.get('rows_loaded', 0)} rows)
-Validation : quality={vr.get('quality_score', 0):.2f}  flagged={vr.get('rows_flagged', 0)}
-Transformed: {ps.get('rows_after_transform', 0)} rows  revenue=${ps.get('revenue_total', 0):.2f}
-Exported   : {ps.get('rows_exported', 0)} rows
-
-Choose your next action as a single JSON object.\
+You are an autonomous agent in S.P.E.C.T.R.E. Complete the data pipeline in as few steps as possible.
+Respond with ONLY a valid JSON object. No explanation, no markdown.\
 """
 
 
@@ -88,11 +34,16 @@ def get_llm_action(obs: dict) -> dict | None:
     if client is None:
         return None
     try:
+        prompt = (
+            f"Task: {obs['task']} | Next op: {obs['next_required_op']} | "
+            f"Remaining: {obs['remaining_steps']} | Tools: {obs['custom_tools_defined']}\n"
+            f"Choose your next action as a single JSON object."
+        )
         resp = client.chat.completions.create(
             model       = MODEL_NAME,
             messages    = [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user",   "content": build_prompt(obs)},
+                {"role": "user",   "content": prompt},
             ],
             temperature = 0,
             max_tokens  = 200,
@@ -104,26 +55,47 @@ def get_llm_action(obs: dict) -> dict | None:
         return None
 
 
-def _clamp(r: float) -> float:
-    """Ensure reward is strictly between 0 and 1 (never 0.0 or 1.0)."""
-    return round(min(0.99, max(0.01, r)), 4)
+def _safe(v: float) -> float:
+    """Strictly clamp to (0.01, 0.99) — never 0.0 or 1.0."""
+    v = float(v)
+    if v <= 0.0:
+        return 0.01
+    if v >= 1.0:
+        return 0.99
+    return min(0.99, max(0.01, v))
+
+
+def _compute_score(rewards: list[float], success: bool, steps: int, max_steps: int) -> float:
+    """Compute a single task score strictly within (0.01, 0.99)."""
+    if not rewards:
+        return 0.01
+    mean_r = sum(rewards) / len(rewards)
+    efficiency = max(0.01, 1.0 - (steps / max(max_steps, 1)))
+    if success:
+        score = 0.5 * mean_r + 0.5 * efficiency
+    else:
+        score = 0.2 * mean_r
+    return _safe(score)
 
 
 def log_start(task: str, model: str):
     print(f"[START] task={task} env=spectre model={model}", flush=True)
 
+
 def log_step(step: int, action: dict, reward: float, done: bool, error: str | None):
     print(
         f"[STEP] step={step} action={json.dumps(action)} "
-        f"reward={_clamp(reward):.2f} done={str(done).lower()} "
+        f"reward={_safe(reward):.4f} done={str(done).lower()} "
         f"error={error or 'null'}",
         flush=True,
     )
 
-def log_end(success: bool, steps: int, rewards: list[float]):
-    rewards_str = ",".join(f"{_clamp(r):.2f}" for r in rewards)
-    print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}",
-          flush=True)
+
+def log_end(success: bool, steps: int, score: float):
+    print(
+        f"[END] success={str(success).lower()} steps={steps} score={_safe(score):.4f}",
+        flush=True,
+    )
 
 
 def run_task(task_name: str):
@@ -147,6 +119,7 @@ def run_task(task_name: str):
                     action = fallback.act(obs)
 
                 obs, reward, done, info = env.step(action)
+                reward = _safe(reward)
                 rewards.append(reward)
                 log_step(steps, action, reward, done, info.get("error"))
 
@@ -156,8 +129,12 @@ def run_task(task_name: str):
 
         success = obs["progress"] >= obs["target_length"]
 
+    except Exception:
+        success = False
+
     finally:
-        log_end(success=success, steps=steps, rewards=rewards)
+        score = _compute_score(rewards, success, steps, env.max_steps)
+        log_end(success=success, steps=steps, score=score)
 
 
 if __name__ == "__main__":
