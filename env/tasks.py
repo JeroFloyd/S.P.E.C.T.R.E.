@@ -1,47 +1,32 @@
+from __future__ import annotations
+
 TASK_REGISTRY: dict[str, dict] = {
-
     "easy": {
-        "sequence": [
-            "parse_data",
-            "validate_data",
-            "parse_data",
-            "validate_data",
-        ],
+        "sequence": ["parse_data", "validate_data", "transform_data"],
         "max_steps": 20,
-        "description": (
-            "Ingest and validate two separate data batches. "
-            "No transformation or export required. "
-            "Optimal agent executes all 4 primitives directly (4 steps)."
-        ),
+        "description": "Single batch ETL. Optimal: 3 steps (just execute primitives).",
     },
-
     "medium": {
-        "sequence": [
-            "parse_data",  "validate_data", "transform_data",
-            "parse_data",  "validate_data", "transform_data",
-        ],
+        "sequence": ["parse_data", "validate_data", "transform_data", 
+                     "parse_data", "validate_data", "transform_data"],
         "max_steps": 30,
-        "description": (
-            "Run a full parse → validate → transform ETL cycle on two separate batches. "
-            "Optimal agent creates an 'etl_batch' tool for the 3-step cycle and invokes it "
-            "twice, completing the pipeline in 4 total steps instead of 6."
-        ),
+        "description": "TWO batch ETL. Optimal: 3 steps (create etl_batch tool + use it 2x).",
     },
-
     "hard": {
-        "sequence": [
-            "parse_data",  "validate_data", "transform_data",
-            "parse_data",  "validate_data", "transform_data",
-            "parse_data",  "validate_data", "transform_data",
-            "export_result",
-        ],
+        "sequence": ["parse_data", "validate_data", "transform_data", 
+                     "parse_data", "validate_data", "transform_data",
+                     "parse_data", "validate_data", "transform_data",
+                     "export_result"],
         "max_steps": 50,
-        "description": (
-            "Run three full ETL cycles across three data batches, then export the final result. "
-            "Optimal agent builds hierarchical tools: 'etl_batch' (3 ops) → 'triple_etl' (3× etl_batch) "
-            "→ invokes triple_etl → export_result. Completes in 5 steps instead of 10, "
-            "demonstrating full self-programming leverage."
-        ),
+        "description": "THREE batch ETL + export. Optimal: 5 steps (create tools + compress).",
     },
-
+    "expert": {
+        "sequence": ["parse_data", "validate_data", "transform_data",
+                     "parse_data", "validate_data", "transform_data",
+                     "parse_data", "validate_data", "transform_data",
+                     "parse_data", "validate_data", "transform_data",
+                     "aggregate_result", "export_result"],
+        "max_steps": 60,
+        "description": "FOUR batch ETL + aggregate + export. Optimal: 7 steps (hierarchical tools).",
+    },
 }
