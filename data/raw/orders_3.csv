@@ -1,0 +1,81 @@
+order_id,customer_id,product,quantity,unit_price,status,order_date,region,sales_rep
+ORD-03000,CUST-8293,Ergonomic Chair,10,931.18,completed,2024-03-21,North,REP-149
+ORD-03001,CUST-1984,Mechanical Keyboard,5,334.86,completed,03/09/2025,North,REP-104
+ORD-03002,CUST-4376,Wireless Mouse,2,45.5,completed,2024-04-30,East,REP-196
+ORD-03003,CUST-8171,Laptop Pro 15,12,70.45,completed,2024-09-15,West,REP-109
+ORD-03004,CUST-1691,Portable Charger,12,222.42,cancelled,2024/10/28,Central,REP-119
+ORD-03005,CUST-6036,Laptop Pro 15,16,248.75,completed,10-27-2024,South,REP-150
+ORD-03006,CUST-1207,Portable Charger,18,644.09,completed,2025/09/27,North,REP-189
+ORD-03007,CUST-6765,LED Desk Lamp,12,594.5,completed,2024/06/29,West,REP-138
+ORD-03008,CUST-7066,Webcam HD,14,369.9,processing,28/03/2024,West,REP-150
+ORD-03009,CUST-2261,Portable Charger,4,977.22,cancelled,2025/01/02,North,REP-135
+ORD-03010,CUST-3722,4K Monitor,12,818.98,completed,2025-11-06,North,REP-192
+ORD-03011,CUST-7951,External SSD 1TB,19,566.19,cancelled,2025/09/01,West,REP-134
+ORD-03012,CUST-2081,Webcam HD,14,124.98,completed,2024/08/26,West,REP-182
+ORD-03013,CUST-8268,LED Desk Lamp,9,89.51,pending,10-28-2024,Central,REP-128
+ORD-03014,CUST-3862,Tablet 10in,14,610.05,completed,22/11/2024,Central,REP-195
+ORD-03015,CUST-2122,Ergonomic Chair,19,310.24,completed,08-17-2025,East,REP-114
+ORD-03016,CUST-6623,Noise Cancelling Headphones,5,277.63,completed,11-22-2024,North,REP-121
+ORD-03017,CUST-5921,Smart Watch,1,504.03,cancelled,03/11/2025,Central,REP-148
+ORD-03018,CUST-5152,Laptop Pro 15,,202.2,completed,2024/04/24,North,REP-157
+ORD-03019,CUST-9368,Mechanical Keyboard,6,885.22,completed,2025-11-30,South,REP-154
+ORD-03020,CUST-2089,Smart Watch,1,54.44,pending,26/07/2024,North,REP-179
+ORD-03021,CUST-2896,Noise Cancelling Headphones,3,267.18,completed,2025/12/02,North,REP-126
+ORD-03022,CUST-4110,4K Monitor,14,236.84,pending,2024-07-01,South,REP-144
+ORD-03023,CUST-3077,Portable Charger,14,998.75,completed,08-26-2024,East,REP-156
+ORD-03024,CUST-6901,External SSD 1TB,20,191.28,refunded,07/01/2025,North,REP-126
+ORD-03025,CUST-9521,Graphics Card RTX,2,953.37,pending,03/11/2025,West,REP-156
+ORD-03026,CUST-3997,Webcam HD,7,125.83,pending,03/11/2024,South,REP-126
+ORD-03027,CUST-9138,Standing Desk,19,930.78,completed,2024/08/07,East,REP-113
+ORD-03028,CUST-1524,Laptop Pro 15,18,57.08,pending,14/06/2024,East,REP-187
+ORD-03029,CUST-7822,4K Monitor,13,258.63,completed,09-02-2025,North,REP-129
+ORD-03030,CUST-8982,LED Desk Lamp,5,836.07,pending,2024-05-27,West,REP-148
+ORD-03031,CUST-5317,Laptop Pro 15,5,840.03,completed,12-07-2024,East,REP-102
+ORD-03032,CUST-4120,Noise Cancelling Headphones,15,774.4,completed,20/02/2024,West,REP-108
+ORD-03033,CUST-1357,USB-C Hub,7,236.65,completed,12-12-2024,North,REP-128
+ORD-03034,CUST-4704,Graphics Card RTX,3,837.47,pending,20/08/2024,South,REP-177
+ORD-03035,CUST-4154,Smart Watch,11,371.05,completed,not-a-date,East,REP-154
+ORD-03036,CUST-3508,Portable Charger,19,914.79,processing,03-11-2025,South,REP-107
+ORD-03037,CUST-1865,Standing Desk,8,833.46,refunded,04-28-2024,South,REP-148
+ORD-03038,CUST-8578,Ergonomic Chair,6,13.51,completed,2025-10-20,North,REP-170
+ORD-03039,CUST-2705,USB-C Hub,1,835.0,cancelled,2024-12-03,Central,REP-138
+ORD-03040,CUST-4049,4K Monitor,8,591.18,completed,2024/01/11,North,REP-154
+ORD-03041,CUST-8237,Mechanical Keyboard,15,97.66,refunded,2024-12-26,West,REP-186
+ORD-03041,CUST-8028,Laptop Pro 15,12,869.38,completed,01/11/2024,East,REP-116
+ORD-03043,CUST-2391,Wireless Mouse,8,445.72,completed,03-24-2025,North,REP-190
+ORD-03044,CUST-2854,USB-C Hub,9,207.38,pending,06-10-2024,East,REP-110
+ORD-03045,CUST-7747,Wireless Mouse,20,659.34,completed,01-21-2025,West,REP-193
+ORD-03046,CUST-4519,USB-C Hub,9,878.11,completed,10-19-2024,North,REP-158
+ORD-03047,CUST-6221,Webcam HD,3,526.37,processing,2025-07-27,West,REP-197
+ORD-03048,CUST-3402,Smart Watch,12,799.84,pending,04/07/2024,West,REP-130
+ORD-03049,CUST-1975,Graphics Card RTX,,417.27,pending,2024-10-20,South,REP-121
+ORD-03050,CUST-6667,Tablet 10in,14,878.0,refunded,2024-12-22,West,REP-139
+ORD-03051,CUST-9428,Wireless Mouse,19,29.65,completed,2024-01-22,Central,REP-148
+ORD-03052,CUST-2447,4K Monitor,5,469.76,completed,03/05/2025,South,REP-139
+ORD-03053,CUST-1946,Ergonomic Chair,18,571.11,completed,04/05/2025,East,REP-109
+ORD-03054,CUST-7771,Tablet 10in,2,503.24,completed,2024-02-01,Central,REP-136
+ORD-03055,CUST-1312,Mechanical Keyboard,3,187.77,pending,2025-08-12,South,REP-149
+ORD-03056,CUST-5575,4K Monitor,18,-960.93,pending,not-a-date,West,REP-151
+ORD-03057,CUST-9962,External SSD 1TB,18,810.8,completed,09-11-2024,East,REP-124
+ORD-03057,CUST-6541,Smart Watch,,82.53,pending,2024/03/11,North,REP-160
+ORD-03059,CUST-4546,Mechanical Keyboard,5,576.98,completed,07/03/2024,South,REP-171
+ORD-03060,CUST-7877,LED Desk Lamp,6,811.86,completed,2025-12-03,East,REP-128
+ORD-03061,CUST-7009,USB-C Hub,2,221.77,completed,2024-11-11,Central,REP-177
+ORD-03062,CUST-2140,Graphics Card RTX,5,695.91,completed,2024-03-20,Central,REP-147
+ORD-03063,CUST-8949,Standing Desk,18,150.75,pending,09-12-2025,East,REP-115
+ORD-03064,CUST-9664,Noise Cancelling Headphones,3,-366.64,refunded,09/01/2025,Central,REP-125
+ORD-03065,CUST-6425,Noise Cancelling Headphones,15,313.22,completed,2025-08-17,South,REP-137
+ORD-03065,CUST-8198,4K Monitor,2,609.08,processing,16/04/2024,West,REP-132
+ORD-03067,CUST-4078,Ergonomic Chair,11,-582.71,cancelled,2024-01-04,Central,REP-169
+ORD-03068,CUST-2751,USB-C Hub,9,498.34,pending,2025-01-19,South,REP-187
+ORD-03069,CUST-2307,Portable Charger,19,608.18,pending,11-08-2025,Central,REP-172
+ORD-03070,CUST-2130,Smart Watch,,982.97,completed,2025-03-30,West,REP-186
+ORD-03071,CUST-7525,LED Desk Lamp,2,528.6,completed,2024-05-27,West,REP-100
+ORD-03072,CUST-1107,Portable Charger,12,361.37,completed,2024/07/04,North,REP-166
+ORD-03073,CUST-7585,Standing Desk,16,171.27,pending,2025/11/17,East,REP-185
+ORD-03074,CUST-2481,LED Desk Lamp,6,549.67,pending,22/07/2024,West,REP-170
+ORD-03075,CUST-4789,Wireless Mouse,9,767.73,cancelled,2025/12/14,North,REP-167
+ORD-03076,CUST-1641,Mechanical Keyboard,14,420.82,completed,08-05-2025,East,REP-101
+ORD-03077,CUST-7158,Portable Charger,15,782.31,refunded,2025-11-09,West,REP-161
+ORD-03078,CUST-4445,Graphics Card RTX,15,51.92,completed,2024-02-15,South,REP-181
+ORD-03079,CUST-8939,Portable Charger,19,727.21,completed,2024-02-05,West,REP-195
