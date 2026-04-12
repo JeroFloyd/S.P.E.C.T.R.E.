@@ -1,9 +1,9 @@
 name: spectre-env
 description: >
-  S.P.E.C.T.R.E — Self-Programming Environment for Complex Task Reconstruction & Evolution.
-  An AI agent must complete real-world data processing pipelines by executing primitive
-  operations OR by composing and invoking reusable tool macros. The agent is rewarded
-  for completing the pipeline in fewer total steps, incentivising self-programming behaviour.
+  S.P.E.C.T.R.E v2 — Self-Programming Environment for Complex Task Reconstruction & Evolution.
+  An AI agent completes real-world ETL data pipelines by executing primitive operations
+  OR by composing and invoking reusable tool macros. Agents are rewarded for completing
+  pipelines in fewer steps via hierarchical self-programming.
 version: "2.0.0"
 tags:
   - openenv
@@ -11,25 +11,27 @@ tags:
   - tool-use
   - data-pipeline
   - self-programming
+  - etl
+  - hierarchical
 
 observation:
   type: dict
   fields:
-    task:                 string
-    task_description:     string
-    session_id:           string
-    progress:             int
-    target_length:        int
-    remaining_steps:      int
-    next_required_op:     string
-    step_count:           int
-    max_steps:            int
+    task: string
+    task_description: string
+    session_id: string
+    progress: int
+    target_length: int
+    remaining_steps: int
+    next_required_op: string
+    step_count: int
+    max_steps: int
     available_primitives: list
-    available_tools:      list
+    available_tools: list
     custom_tools_defined: list
-    tool_registry:        dict
-    compression_ratio:    float
-    pipeline_state:       dict
+    tool_registry: dict
+    compression_ratio: float
+    pipeline_state: dict
 
 actions:
   - primitive
@@ -40,63 +42,41 @@ primitives:
   - parse_data
   - validate_data
   - transform_data
+  - aggregate_result
   - export_result
 
 tasks:
   - name: easy
-    description: >
-      Ingest and validate two separate data batches.
-      No transformation or export required.
-      Optimal agent executes all 4 primitives directly (4 steps).
-    target_sequence:
-      - parse_data
-      - validate_data
-      - parse_data
-      - validate_data
+    description: Ingest and validate two data batches. Optimal agent executes 4 primitives directly.
+    target_sequence: [parse_data, validate_data, parse_data, validate_data]
     difficulty: easy
     optimal_steps: 4
 
   - name: medium
-    description: >
-      Full parse -> validate -> transform ETL cycle repeated twice. 6-step target.
-      Optimal agent builds an etl_batch tool and reuses it (3 steps total).
-    target_sequence:
-      - parse_data
-      - validate_data
-      - transform_data
-      - parse_data
-      - validate_data
-      - transform_data
+    description: Full ETL cycle repeated twice. Optimal agent builds etl_batch tool and reuses it (3 steps).
+    target_sequence: [parse_data, validate_data, transform_data, parse_data, validate_data, transform_data]
     difficulty: medium
     optimal_steps: 3
 
   - name: hard
-    description: >
-      Three full ETL cycles followed by export. 10-step target.
-      Optimal agent builds hierarchical tools to complete in 4 steps.
-    target_sequence:
-      - parse_data
-      - validate_data
-      - transform_data
-      - parse_data
-      - validate_data
-      - transform_data
-      - parse_data
-      - validate_data
-      - transform_data
-      - export_result
+    description: Three ETL cycles then export. Optimal agent uses hierarchical tools to complete in 4 steps.
+    target_sequence: [parse_data, validate_data, transform_data, parse_data, validate_data, transform_data, parse_data, validate_data, transform_data, export_result]
     difficulty: hard
     optimal_steps: 4
+
+  - name: expert
+    description: Four ETL cycles then aggregate then export. Optimal agent completes in 5 steps instead of 14.
+    target_sequence: [parse_data, validate_data, transform_data, parse_data, validate_data, transform_data, parse_data, validate_data, transform_data, parse_data, validate_data, transform_data, aggregate_result, export_result]
+    difficulty: expert
+    optimal_steps: 5
 
 reward:
   type: shaped
   description: >
-    step_penalty: -0.01 per step (efficiency pressure).
-    progress_bonus: +0.05 per primitive correctly completed.
-    completion_bonus: up to 0.99 based on efficiency.
-    quality_bonus: +0.15 if output quality >= 0.90, +0.07 if >= 0.75.
-    compression_bonus: +0.10 if agent used self-programming and step_count < progress.
-    Each step reward is clipped to strictly within (0.01, 0.99).
+    step_penalty -0.01 per step. progress_bonus +0.05 per primitive completed.
+    completion_bonus up to 0.99 based on efficiency. quality_bonus +0.20 if quality >= 0.90.
+    compression_bonus +0.15 if agent used tools. aggregate_bonus +0.05 if cross-batch aggregation performed.
+    All rewards clamped strictly within (0.01, 0.99).
   range:
     - 0.01
     - 0.99
