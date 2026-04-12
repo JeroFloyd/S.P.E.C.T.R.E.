@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 from env.environment import SpectreEnv
 from grader.grader import grade_episode
 
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s -- %(message)s"
@@ -60,10 +61,20 @@ MAX_SESSIONS = 100
 
 
 def _safe(v: float) -> float:
-    v = float(v)
-    if v <= 0.0: return 0.01
-    if v >= 1.0: return 0.99
-    return min(0.99, max(0.01, v))
+    """Ensure value is STRICTLY between 0 and 1."""
+    try:
+        v = float(v)
+    except:
+        return 0.5
+    if v <= 0.0:
+        return 0.01
+    if v >= 1.0:
+        return 0.99
+    result = max(0.01, min(0.99, v))
+    if result <= 0.0 or result >= 1.0:
+        return 0.5
+    return result
+
 
 
 def _to_py(val):
