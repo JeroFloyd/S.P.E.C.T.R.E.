@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S.P.E.C.T.R.E v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050507;--surface:#0c0c10;--surface2:#111117;--surface3:#18181f;
+  --border:#1e1e28;--border2:#2a2a38;
+  --accent:#00d4ff;--accent2:#7c3aed;--accent3:#10b981;
+  --warn:#f59e0b;--danger:#ef4444;
+  --text:#e8e8f0;--text2:#8888aa;--text3:#44445a;
+  --font-mono:'JetBrains Mono',monospace;--font-display:'Syne',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:13px;min-height:100vh;overflow-x:hidden}
+.scanline{pointer-events:none;position:fixed;inset:0;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);animation:scan 8s linear infinite}
+@keyframes scan{0%{background-position:0 0}100%{background-position:0 100px}}
+.noise{pointer-events:none;position:fixed;inset:0;z-index:9998;opacity:0.018;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:56px;background:rgba(5,5,7,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:32px;height:32px;border-radius:6px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:14px;color:#fff;box-shadow:0 0 20px rgba(0,212,255,0.3)}
+.logo-text{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:0.05em}
+.logo-version{font-size:10px;color:var(--text3);margin-left:4px}
+.header-status{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--accent3);box-shadow:0 0 8px var(--accent3);animation:pulse-dot 2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+.layout{display:grid;grid-template-columns:280px 1fr 300px;min-height:calc(100vh - 56px)}
+.sidebar{border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:8px}
+.sidebar-label{font-size:9px;font-weight:600;letter-spacing:0.15em;color:var(--text3);text-transform:uppercase;padding:0 8px;margin-bottom:8px}
+.task-btn{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text2);font-family:var(--font-mono);font-size:12px;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;transition:all 0.15s ease;margin-bottom:4px}
+.task-btn:hover{border-color:var(--border2);background:var(--surface2);color:var(--text)}
+.task-btn.active{border-color:var(--accent);background:rgba(0,212,255,0.05);color:var(--accent)}
+.task-badge{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}
+.badge-easy{background:rgba(16,185,129,0.15);color:var(--accent3)}
+.badge-medium{background:rgba(245,158,11,0.15);color:var(--warn)}
+.badge-hard{background:rgba(239,68,68,0.15);color:var(--danger)}
+.badge-expert{background:rgba(124,58,237,0.15);color:var(--accent2)}
+.run-btn{width:100%;margin-top:16px;padding:12px;border:none;border-radius:6px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;font-family:var(--font-mono);font-size:12px;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s ease;box-shadow:0 4px 20px rgba(0,212,255,0.2)}
+.run-btn:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(0,212,255,0.35)}
+.run-btn:active{transform:translateY(0)}
+.run-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.seed-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font-mono);font-size:12px;padding:6px 8px;outline:none}
+.seed-input:focus{border-color:var(--accent)}
+.main{display:flex;flex-direction:column;overflow:hidden}
+.hero{padding:32px 40px 24px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(0,212,255,0.02) 0%,transparent 100%)}
+.hero-title{font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-0.02em;line-height:1.1}
+.hero-title span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{margin-top:8px;font-size:12px;color:var(--text2);line-height:1.6;max-width:560px}
+.metrics-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.metric{background:var(--surface);padding:16px 20px}
+.metric-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);font-weight:600}
+.metric-value{margin-top:6px;font-size:22px;font-weight:600;font-family:var(--font-display);color:var(--text);transition:all 0.3s ease}
+.metric-value.accent{color:var(--accent)}.metric-value.green{color:var(--accent3)}.metric-value.purple{color:var(--accent2)}
+.metric-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.content-area{flex:1;display:grid;grid-template-rows:1fr auto;overflow:hidden}
+.terminal{flex:1;overflow-y:auto;padding:24px 40px;font-size:12px;line-height:1.7;background:var(--bg)}
+.terminal::-webkit-scrollbar{width:4px}
+.terminal::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.term-line{display:flex;gap:12px;align-items:flex-start;padding:2px 0;animation:fade-in 0.2s ease}
+@keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.term-step{color:var(--text3);min-width:28px;text-align:right;user-select:none}
+.term-tag{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:600;white-space:nowrap;margin-top:2px}
+.tag-primitive{background:rgba(0,212,255,0.1);color:var(--accent);border:1px solid rgba(0,212,255,0.2)}
+.tag-create{background:rgba(124,58,237,0.1);color:var(--accent2);border:1px solid rgba(124,58,237,0.2)}
+.tag-use{background:rgba(16,185,129,0.1);color:var(--accent3);border:1px solid rgba(16,185,129,0.2)}
+.tag-system{background:rgba(136,136,170,0.1);color:var(--text2);border:1px solid var(--border)}
+.tag-error{background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2)}
+.term-content{flex:1;color:var(--text)}
+.term-content .op{color:var(--accent);font-weight:600}
+.term-content .reward{color:var(--accent3)}
+.term-content .reward.low{color:var(--warn)}
+.term-content .dim{color:var(--text3)}
+.term-content .tool-name{color:var(--accent2);font-weight:600}
+.term-content .seq{color:var(--text2)}
+.term-empty{color:var(--text3);padding:40px 0;text-align:center}
+.term-empty .big{font-family:var(--font-display);font-size:48px;opacity:0.15;display:block;margin-bottom:12px}
+.progress-section{padding:16px 40px;border-top:1px solid var(--border);background:var(--surface)}
+.progress-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.progress-label{font-size:10px;color:var(--text2);letter-spacing:0.08em}
+.progress-count{font-size:11px;color:var(--text);font-weight:600}
+.progress-track{height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 0.5s cubic-bezier(0.4,0,0.2,1);width:0%}
+.compress-track{margin-top:8px;height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
+.compress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent3),#00ff88);transition:width 0.5s ease;width:0%}
+.right-panel{border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border)}
+.panel-tab{flex:1;padding:12px 0;text-align:center;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+.panel-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel-tab:hover:not(.active){color:var(--text2)}
+.panel-content{flex:1;overflow-y:auto;padding:16px}
+.panel-content::-webkit-scrollbar{width:3px}
+.panel-content::-webkit-scrollbar-thumb{background:var(--border2)}
+.panel-section{margin-bottom:20px}
+.panel-section-title{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:10px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-key{font-size:11px;color:var(--text2)}
+.stat-val{font-size:11px;color:var(--text);font-weight:500;text-align:right}
+.stat-val.green{color:var(--accent3)}.stat-val.blue{color:var(--accent)}.stat-val.purple{color:var(--accent2)}
+.tool-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;margin:3px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);font-size:10px;color:var(--accent2);font-weight:600}
+.tool-chip-seq{font-size:9px;color:var(--text3);font-weight:400}
+.verdict-box{padding:12px;border-radius:6px;border:1px solid var(--border2);font-size:11px;line-height:1.5}
+.verdict-pass{border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.05);color:var(--accent3)}
+.verdict-fail{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);color:var(--danger)}
+.verdict-pending{border-color:var(--border2);background:var(--surface2);color:var(--text3)}
+.seq-viz{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px}
+.seq-op{padding:3px 7px;border-radius:3px;font-size:9px;font-weight:500;background:var(--surface3);border:1px solid var(--border2);color:var(--text3);transition:all 0.2s}
+.seq-op.done{background:rgba(0,212,255,0.08);border-color:rgba(0,212,255,0.2);color:var(--accent)}
+.seq-op.current{background:rgba(124,58,237,0.15);border-color:var(--accent2);color:var(--accent2);animation:pulse-op 1s ease-in-out infinite}
+@keyframes pulse-op{0%,100%{opacity:1}50%{opacity:0.6}}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* View toggle */
+.view-toggle{display:flex;margin-bottom:12px;border:1px solid var(--border2);border-radius:5px;overflow:hidden}
+.view-toggle-btn{flex:1;padding:7px 0;text-align:center;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:transparent;border:none;color:var(--text3);cursor:pointer;font-family:var(--font-mono);transition:all 0.15s}
+.view-toggle-btn.raw-active{background:rgba(239,68,68,0.18);color:var(--danger)}
+.view-toggle-btn.clean-active{background:rgba(16,185,129,0.18);color:var(--accent3)}
+/* Batch tab buttons (raw pane only) */
+.batch-tabs{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.batch-tab-btn{padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:10px;cursor:pointer;font-family:var(--font-mono);transition:all 0.15s}
+.batch-tab-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.05)}
+/* Data tables */
+.data-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:6px;max-height:340px;overflow-y:auto}
+.data-table-wrap::-webkit-scrollbar{width:3px;height:3px}
+.data-table-wrap::-webkit-scrollbar-thumb{background:var(--border2)}
+.data-table{width:100%;border-collapse:collapse;font-size:10px}
+.data-table th{background:var(--surface2);color:var(--text3);padding:6px 8px;text-align:left;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:2}
+.data-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text2);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr.dirty td{background:rgba(239,68,68,0.04)}
+.data-table td.issue{color:var(--danger);font-weight:600}
+.data-table td.derived{color:var(--accent3);font-weight:600}
+.data-loading{color:var(--text3);font-size:11px;padding:20px 0;text-align:center}
+.data-summary{display:flex;gap:6px;margin-bottom:8px;font-size:10px;flex-wrap:wrap}
+.data-summary span{padding:3px 8px;border-radius:3px;font-weight:600}
+.ds-total{background:var(--surface2);color:var(--text2)}
+.ds-dirty{background:rgba(239,68,68,0.1);color:var(--danger)}
+.ds-clean{background:rgba(16,185,129,0.1);color:var(--accent3)}
+.ds-revenue{background:rgba(124,58,237,0.1);color:var(--accent2)}
+.source-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:4px;font-size:10px;font-weight:600;margin-bottom:8px;border:1px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.06);color:var(--accent3)}
+.repairs-box{font-size:10px;color:var(--text3);margin-bottom:8px;padding:6px 10px;background:var(--surface2);border-radius:4px;border-left:2px solid var(--accent3);line-height:1.6}
+.no-episode-msg{color:var(--text3);font-size:11px;padding:24px 0;text-align:center;line-height:1.8}
+@media(max-width:1100px){.layout{grid-template-columns:240px 1fr}.right-panel{display:none}}
+@media(max-width:700px){.layout{grid-template-columns:1fr}.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="noise"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">S</div>
+    <div><span class="logo-text">S.P.E.C.T.R.E</span><span class="logo-version">v2.0</span></div>
+  </div>
+  <div class="header-status">
+    <div class="status-dot"></div>
+    <span id="header-status-text">API Ready</span>
+    <span style="color:var(--border2);margin:0 8px">|</span>
+    <span style="color:var(--text3)">Self-Programming ETL Environment</span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div style="margin-bottom:8px">
+      <div class="sidebar-label">Task</div>
+      <button class="task-btn active" onclick="selectTask('easy',this)"><span>easy</span><span class="task-badge badge-easy">3 ops</span></button>
+      <button class="task-btn" onclick="selectTask('medium',this)"><span>medium</span><span class="task-badge badge-medium">6 ops</span></button>
+      <button class="task-btn" onclick="selectTask('hard',this)"><span>hard</span><span class="task-badge badge-hard">10 ops</span></button>
+      <button class="task-btn" onclick="selectTask('expert',this)"><span>expert</span><span class="task-badge badge-expert">14 ops</span></button>
+    </div>
+    <div style="margin-bottom:8px">
+      <div class="sidebar-label">Seed</div>
+      <input class="seed-input" type="number" id="seed-input" value="42" min="1" max="9999">
+    </div>
+    <button class="run-btn" id="run-btn" onclick="runEpisode()">▶ RUN EPISODE</button>
+    <div style="margin-top:auto;padding-top:24px">
+      <div class="sidebar-label">Optimal Steps</div>
+      <div class="stat-row"><span class="stat-key">easy</span><span class="stat-val">3</span></div>
+      <div class="stat-row"><span class="stat-key">medium</span><span class="stat-val green">3</span></div>
+      <div class="stat-row"><span class="stat-key">hard</span><span class="stat-val blue">5</span></div>
+      <div class="stat-row"><span class="stat-key">expert</span><span class="stat-val purple">7</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="hero">
+      <div class="hero-title">Self-<span>Programming</span> ETL Agent</div>
+      <div class="hero-sub">Agent builds reusable tool macros to compress 14-step pipelines into 5 API calls. Watch dirty CSV data become clean, enriched output in real time.</div>
+    </div>
+    <div class="metrics-bar">
+      <div class="metric"><div class="metric-label">Progress</div><div class="metric-value accent" id="m-progress">0/0</div><div class="metric-sub">primitives</div></div>
+      <div class="metric"><div class="metric-label">Steps Used</div><div class="metric-value" id="m-steps">0</div><div class="metric-sub" id="m-steps-sub">of 0 max</div></div>
+      <div class="metric"><div class="metric-label">Compression</div><div class="metric-value green" id="m-compress">—</div><div class="metric-sub">ops per step</div></div>
+      <div class="metric"><div class="metric-label">Revenue</div><div class="metric-value purple" id="m-revenue">$0</div><div class="metric-sub">cumulative</div></div>
+      <div class="metric"><div class="metric-label">Quality</div><div class="metric-value" id="m-quality">—</div><div class="metric-sub">data score</div></div>
+    </div>
+    <div class="content-area">
+      <div class="terminal" id="terminal">
+        <div class="term-empty"><span class="big">⌬</span>Select a task and click RUN EPISODE to begin</div>
+      </div>
+      <div class="progress-section">
+        <div class="progress-header"><span class="progress-label">PIPELINE PROGRESS</span><span class="progress-count" id="prog-count">0 / 0</span></div>
+        <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px">
+          <span class="progress-label">COMPRESSION RATIO</span>
+          <span class="progress-count" id="compress-count">—</span>
+        </div>
+        <div class="compress-track"><div class="compress-fill" id="compress-fill"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="right-panel">
+    <div class="panel-tabs">
+      <div class="panel-tab" onclick="switchTab('data',this)">Data</div>
+      <div class="panel-tab active" onclick="switchTab('pipeline',this)">Pipeline</div>
+      <div class="panel-tab" onclick="switchTab('tools',this)">Tools</div>
+      <div class="panel-tab" onclick="switchTab('result',this)">Result</div>
+    </div>
+
+    <!-- DATA TAB -->
+    <div class="panel-content" id="tab-data" style="display:none">
+      <div class="panel-section">
+        <div class="panel-section-title">Batch Data</div>
+        <div class="view-toggle">
+          <button class="view-toggle-btn raw-active" id="btn-raw"   onclick="setView('raw')">⚠ Raw (dirty)</button>
+          <button class="view-toggle-btn"            id="btn-clean" onclick="setView('clean')">✓ Agent Output</button>
+        </div>
+      </div>
+
+      <!-- RAW PANE -->
+      <div id="raw-pane">
+        <div style="font-size:9px;color:var(--text3);margin-bottom:6px;letter-spacing:0.08em;text-transform:uppercase">Select batch file</div>
+        <div class="batch-tabs" id="raw-batch-tabs"></div>
+        <div id="raw-table-area">
+          <div class="data-loading">Pick a batch above to preview raw data</div>
+        </div>
+      </div>
+
+      <!-- CLEAN PANE -->
+      <div id="clean-pane" style="display:none">
+        <div id="clean-table-area">
+          <div class="no-episode-msg">
+            <span style="font-size:28px;display:block;margin-bottom:8px;opacity:0.2">⌬</span>
+            Run an episode first.<br>
+            <span style="font-size:10px;opacity:0.6">Agent output appears here<br>after transform_data runs.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIPELINE TAB -->
+    <div class="panel-content" id="tab-pipeline">
+      <div class="panel-section">
+        <div class="panel-section-title">Sequence</div>
+        <div class="seq-viz" id="seq-viz"></div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-section-title">Current Batch</div>
+        <div class="stat-row"><span class="stat-key">source</span><span class="stat-val" id="p-source">—</span></div>
+        <div class="stat-row"><span class="stat-key">rows loaded</span><span class="stat-val" id="p-rows">—</span></div>
+        <div class="stat-row"><span class="stat-key">rows clean</span><span class="stat-val green" id="p-clean">—</span></div>
+        <div class="stat-row"><span class="stat-key">rows flagged</span><span class="stat-val" id="p-flagged">—</span></div>
+        <div class="stat-row"><span class="stat-key">quality</span><span class="stat-val" id="p-qual">—</span></div>
+      </div>
+    </div>
+
+    <!-- TOOLS TAB -->
+    <div class="panel-content" id="tab-tools" style="display:none">
+      <div class="panel-section">
+        <div class="panel-section-title">Tool Registry</div>
+        <div id="tool-list"><span style="color:var(--text3);font-size:11px">No tools created yet</span></div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-section-title">Compression Analysis</div>
+        <div class="stat-row"><span class="stat-key">tools defined</span><span class="stat-val" id="ca-tools">0</span></div>
+        <div class="stat-row"><span class="stat-key">tool invocations</span><span class="stat-val" id="ca-uses">0</span></div>
+        <div class="stat-row"><span class="stat-key">ops per step</span><span class="stat-val green" id="ca-ratio">—</span></div>
+      </div>
+    </div>
+
+    <!-- RESULT TAB -->
+    <div class="panel-content" id="tab-result" style="display:none">
+      <div class="panel-section">
+        <div class="panel-section-title">Episode Result</div>
+        <div class="verdict-box verdict-pending" id="verdict-box">Waiting for episode to complete...</div>
+      </div>
+      <div class="panel-section" id="result-stats" style="display:none">
+        <div class="panel-section-title">Final Stats</div>
+        <div class="stat-row"><span class="stat-key">score</span><span class="stat-val blue" id="r-score">—</span></div>
+        <div class="stat-row"><span class="stat-key">steps / optimal</span><span class="stat-val" id="r-steps">—</span></div>
+        <div class="stat-row"><span class="stat-key">compression</span><span class="stat-val green" id="r-compress">—</span></div>
+        <div class="stat-row"><span class="stat-key">rows processed</span><span class="stat-val" id="r-rows">—</span></div>
+        <div class="stat-row"><span class="stat-key">revenue</span><span class="stat-val purple" id="r-revenue">—</span></div>
+        <div class="stat-row"><span class="stat-key">output hash</span><span class="stat-val" id="r-hash" style="font-size:9px">—</span></div>
+      </div>
+      <div class="panel-section" id="agg-section" style="display:none">
+        <div class="panel-section-title">Aggregate Report</div>
+        <div class="stat-row"><span class="stat-key">batches</span><span class="stat-val" id="agg-batches">—</span></div>
+        <div class="stat-row"><span class="stat-key">total rows</span><span class="stat-val" id="agg-rows">—</span></div>
+        <div class="stat-row"><span class="stat-key">top product</span><span class="stat-val green" id="agg-product" style="font-size:10px;max-width:140px;text-align:right">—</span></div>
+        <div class="stat-row"><span class="stat-key">top region</span><span class="stat-val" id="agg-region">—</span></div>
+        <div class="stat-row"><span class="stat-key">completed %</span><span class="stat-val" id="agg-completed">—</span></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const API = window.location.origin;
+
+// ── Global state ─────────────────────────────────────────────────────────────
+let currentTask      = 'easy';
+let running          = false;
+let stepCount        = 0;
+let toolUses         = 0;
+let currentSessionId = null;
+let currentView      = 'raw';
+let currentBatch     = 'orders_1.csv';  // CRITICAL: Track selected batch
+let rawCache         = {};
+
+const ALL_BATCHES = ['orders_1.csv','orders_2.csv','orders_3.csv','orders_4.csv','orders_5.csv','orders_6.csv'];
+
+const TASK_SEQUENCES = {
+  easy:   ['parse_data','validate_data','transform_data'],
+  medium: ['parse_data','validate_data','transform_data','parse_data','validate_data','transform_data'],
+  hard:   ['parse_data','validate_data','transform_data','parse_data','validate_data','transform_data','parse_data','validate_data','transform_data','export_result'],
+  expert: ['parse_data','validate_data','transform_data','parse_data','validate_data','transform_data','parse_data','validate_data','transform_data','parse_data','validate_data','transform_data','aggregate_result','export_result'],
+};
+
+
+// ── Task selection ────────────────────────────────────────────────────────────
+function selectTask(task, btn) {
+  if (running) return;
+  currentTask = task;
+  document.querySelectorAll('.task-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  initSeqViz(task);
+}
+
+// ── Panel tab switching ───────────────────────────────────────────────────────
+function switchTab(tab, el) {
+  ['data','pipeline','tools','result'].forEach(t =>
+    document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none'
+  );
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── View toggle: raw ↔ clean ──────────────────────────────────────────────────
+function setView(view) {
+  currentView = view;
+
+  document.getElementById('btn-raw').className   = 'view-toggle-btn' + (view === 'raw'   ? ' raw-active'   : '');
+  document.getElementById('btn-clean').className = 'view-toggle-btn' + (view === 'clean' ? ' clean-active' : '');
+
+  document.getElementById('raw-pane').style.display   = view === 'raw'   ? 'block' : 'none';
+  document.getElementById('clean-pane').style.display = view === 'clean' ? 'block' : 'none';
+
+  if (view === 'raw') {
+    renderRaw(currentBatch);
+  } else {
+    renderClean();
+  }
+}
+
+// ── Raw batch tab buttons ─────────────────────────────────────────────────────
+function buildRawBatchTabs() {
+  document.getElementById('raw-batch-tabs').innerHTML = ALL_BATCHES.map((f, i) =>
+    `<button class="batch-tab-btn${f === currentBatch ? ' active' : ''}" onclick="selectBatch('${f}',this)">${i + 1}</button>`
+  ).join('');
+}
+
+function selectBatch(filename, btn) {
+  document.querySelectorAll('#raw-batch-tabs .batch-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentBatch = filename;
+  renderRaw(filename);
+}
+
+// ── RAW PANE renderer ─────────────────────────────────────────────────────────
+async function renderRaw(filename) {
+  const area = document.getElementById('raw-table-area');
+
+  if (rawCache[filename]) {
+    paintRawTable(area, rawCache[filename], filename);
+    return;
+  }
+
+  area.innerHTML = `<div class="data-loading"><span class="spinner"></span> Loading ${filename}…</div>`;
+
+  try {
+    const res  = await fetch(`${API}/api/raw/${filename}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    rawCache[filename] = data;
+    paintRawTable(area, data, filename);
+  } catch (e) {
+    area.innerHTML = `<div class="data-loading" style="color:var(--danger)">Failed: ${e.message}</div>`;
+  }
+}
+
+function paintRawTable(area, data, filename) {
+  const rows  = data.rows || [];
+  const dirty = data.dirty_rows || 0;
+  if (!rows.length) {
+    area.innerHTML = `<div class="data-loading">No data in ${filename}</div>`;
+    return;
+  }
+
+  const cols = Object.keys(rows[0]).filter(k => !k.startsWith('_'));
+
+  area.innerHTML = `
+    <div style="font-size:9px;color:var(--text3);margin-bottom:6px">📄 ${filename}</div>
+    <div class="data-summary">
+      <span class="ds-total">${data.total_rows} rows</span>
+      <span class="ds-clean">${data.total_rows - dirty} clean</span>
+      <span class="ds-dirty">⚠ ${dirty} issues</span>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(r => {
+          const iss = r._issues || [];
+          return `<tr class="${r._dirty ? 'dirty' : ''}">${cols.map(c => {
+            const bad =
+              (c === 'quantity'   && (iss.includes('missing_quantity') || iss.includes('invalid_quantity'))) ||
+              (c === 'unit_price' && (iss.includes('negative_price')   || iss.includes('missing_price')))    ||
+              (c === 'status'     && iss.includes('bad_status'))   ||
+              (c === 'order_date' && iss.includes('bad_date'))     ||
+              (c === 'order_id'   && iss.includes('duplicate_id'));
+            const val = r[c];
+            return `<td class="${bad ? 'issue' : ''}">${val == null ? '<span style="opacity:0.3">null</span>' : String(val)}</td>`;
+          }).join('')}</tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── CLEAN PANE renderer ───────────────────────────────────────────────────────
+async function renderClean() {
+  const area = document.getElementById('clean-table-area');
+
+  if (!currentSessionId) {
+    area.innerHTML = `<div class="no-episode-msg">
+      <span style="font-size:28px;display:block;margin-bottom:8px;opacity:0.2">⌬</span>
+      Run an episode first.<br>
+      <span style="font-size:10px;opacity:0.6">Agent output appears here<br>after transform_data runs.</span>
+    </div>`;
+    return;
+  }
+
+  area.innerHTML = `<div class="data-loading"><span class="spinner"></span> Reading agent pipeline output…</div>`;
+
+  try {
+    const res  = await fetch(`${API}/api/result/${currentSessionId}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (!data.rows || data.rows.length === 0) {
+      area.innerHTML = `<div class="no-episode-msg">
+        <span style="font-size:20px;display:block;margin-bottom:8px;opacity:0.3">⚠</span>
+        No transformed data yet.<br>
+        <span style="font-size:10px;opacity:0.6">The <b>easy</b> task only parses &amp; validates<br>
+        — run medium / hard / expert to see agent-reconstructed data.</span>
+      </div>`;
+      return;
+    }
+
+    const rows     = data.rows;
+    const DERIVED  = ['revenue','order_year','order_month','order_quarter','price_tier'];
+    const PREFER   = ['order_id','quantity','unit_price','order_date','status','revenue','order_year','order_month'];
+    const cols     = PREFER.filter(c => rows[0].hasOwnProperty(c));
+    const batches  = data.batches || 1;
+
+    area.innerHTML = `
+      <div class="source-badge">✓ Agent pipeline · ${data.task || currentTask} · ${batches} batch(es)</div>
+      <div class="data-summary">
+        <span class="ds-total">${data.raw_count} raw in</span>
+        <span class="ds-dirty">− ${data.dropped || 0} dropped</span>
+        <span class="ds-clean">= ${data.clean_count} out</span>
+        <span class="ds-revenue">$${(data.revenue_total || 0).toLocaleString('en-US',{maximumFractionDigits:0})}</span>
+      </div>
+      ${data.repairs && data.repairs.length
+        ? `<div class="repairs-box">Agent repairs: ${data.repairs.join(' · ')}</div>`
+        : ''}
+      <div style="font-size:9px;color:var(--text3);margin-bottom:6px">${data.clean_count} rows · showing first 50</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr>${cols.map(c =>
+            `<th${DERIVED.includes(c) ? ' style="color:var(--accent3)"' : ''}>${c}</th>`
+          ).join('')}</tr></thead>
+          <tbody>${rows.slice(0, 50).map(r =>
+            `<tr>${cols.map(c => {
+              const val     = r[c];
+              const display = val == null ? '' : c === 'revenue' ? `$${Number(val).toFixed(2)}` : String(val);
+              return `<td class="${DERIVED.includes(c) ? 'derived' : ''}">${display}</td>`;
+            }).join('')}</tr>`
+          ).join('')}</tbody>
+        </table>
+      </div>
+      ${rows.length > 50
+        ? `<div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:center">Showing 50 of ${rows.length} rows</div>`
+        : ''}`;
+  } catch (e) {
+    area.innerHTML = `<div class="data-loading" style="color:var(--danger)">Error: ${e.message}</div>`;
+  }
+}
+
+// ── Sequence visualiser ───────────────────────────────────────────────────────
+function initSeqViz(task) {
+  const seq = TASK_SEQUENCES[task] || [];
+  document.getElementById('seq-viz').innerHTML = seq.map((op, i) =>
+    `<div class="seq-op" id="seq-op-${i}">${op.replace('_data','').replace('_result','')}</div>`
+  ).join('');
+}
+
+function updateSeqViz(progress, total) {
+  for (let i = 0; i < total; i++) {
+    const el = document.getElementById(`seq-op-${i}`);
+    if (!el) continue;
+    el.className = 'seq-op';
+    if      (i < progress)  el.classList.add('done');
+    else if (i === progress) el.classList.add('current');
+  }
+}
+
+// ── Metrics + pipeline panel ──────────────────────────────────────────────────
+function updateMetrics(obs, ps) {
+  const progress = obs.progress || 0;
+  const target   = obs.target_length || 0;
+  const compress = obs.compression_ratio || 0;
+
+  document.getElementById('m-progress').textContent  = `${progress}/${target}`;
+  document.getElementById('m-steps').textContent     = obs.step_count || 0;
+  document.getElementById('m-steps-sub').textContent = `of ${obs.max_steps || 0} max`;
+  document.getElementById('m-compress').textContent  = compress > 0 ? compress.toFixed(2) + 'x' : '—';
+  document.getElementById('m-revenue').textContent   = `$${(ps.revenue_total || 0).toLocaleString('en-US',{maximumFractionDigits:0})}`;
+  const q = ps.quality_score || 0;
+  document.getElementById('m-quality').textContent   = q > 0 ? (q * 100).toFixed(1) + '%' : '—';
+
+  document.getElementById('prog-fill').style.width      = target > 0 ? (progress / target) * 100 + '%' : '0%';
+  document.getElementById('prog-count').textContent     = `${progress} / ${target}`;
+  const cpct = Math.min((compress / 3) * 100, 100);
+  document.getElementById('compress-fill').style.width  = cpct + '%';
+  document.getElementById('compress-count').textContent = compress > 0 ? compress.toFixed(3) + 'x' : '—';
+
+  updateSeqViz(progress, target);
+
+  const vr = ps.validation || {};
+  document.getElementById('p-source').textContent  = ps.source_file || '—';
+  document.getElementById('p-rows').textContent    = ps.rows_loaded || '—';
+  document.getElementById('p-clean').textContent   = vr.rows_clean   !== undefined ? vr.rows_clean   : '—';
+  document.getElementById('p-flagged').textContent = vr.rows_flagged !== undefined ? vr.rows_flagged : '—';
+  document.getElementById('p-qual').textContent    = vr.quality_score !== undefined ? (vr.quality_score * 100).toFixed(1) + '%' : '—';
+}
+
+// ── Tools panel ───────────────────────────────────────────────────────────────
+function updateTools(registry, tools) {
+  const list = document.getElementById('tool-list');
+  if (!tools || !tools.length) {
+    list.innerHTML = '<span style="color:var(--text3);font-size:11px">No tools created yet</span>';
+  } else {
+    list.innerHTML = tools.map(name => {
+      const e = registry[name] || {};
+      return `<div class="tool-chip"><span>${name}</span><span class="tool-chip-seq">${e.expanded_length || '?'} ops</span></div>
+              <div style="font-size:9px;color:var(--text3);padding:0 4px 8px">${(e.sequence || []).join(' → ')}</div>`;
+    }).join('');
+  }
+  document.getElementById('ca-tools').textContent = tools ? tools.length : 0;
+  document.getElementById('ca-uses').textContent  = toolUses;
+  document.getElementById('ca-ratio').textContent = stepCount > 0
+    ? (toolUses / stepCount * 100).toFixed(0) + '% tool steps' : '—';
+}
+
+// ── Terminal ──────────────────────────────────────────────────────────────────
+function addTermLine(step, tag, tagClass, content) {
+  const term  = document.getElementById('terminal');
+  const empty = term.querySelector('.term-empty');
+  if (empty) empty.remove();
+  const line  = document.createElement('div');
+  line.className = 'term-line';
+  line.innerHTML = `<span class="term-step">${step > 0 ? step : ''}</span>` +
+                   `<span class="term-tag ${tagClass}">${tag}</span>` +
+                   `<span class="term-content">${content}</span>`;
+  term.appendChild(line);
+  term.scrollTop = term.scrollHeight;
+}
+
+function fmt(action) {
+  if (action.type === 'primitive')   return `<span class="op">${action.name}</span>`;
+  if (action.type === 'create_tool') return `define <span class="tool-name">${action.name}</span> <span class="dim">=</span> <span class="seq">[${action.sequence.join(' → ')}]</span>`;
+  if (action.type === 'use_tool')    return `invoke <span class="tool-name">${action.name}</span>`;
+  return JSON.stringify(action);
+}
+
+function fmtR(r) {
+  return `<span class="${r < 0.05 ? 'reward low' : 'reward'}">${r > 0 ? '+' : ''}${r.toFixed(4)}</span>`;
+}
+
+// ── Baseline agent ────────────────────────────────────────────────────────────
+function buildAgent(task) {
+  return {
+    act(obs) {
+      const tools = new Set(obs.custom_tools_defined || []);
+      const rem   = obs.remaining_steps || 0;
+      const next  = obs.next_required_op;
+      
+      // For single-batch processing, just execute primitives in order
+      if (task === 'easy' || task === 'medium' || task === 'hard' || task === 'expert') {
+        // Option to use tools for medium+
+        if (task === 'medium' && !tools.has('etl_batch')) {
+          return { type: 'create_tool', name: 'etl_batch', sequence: ['parse_data','validate_data','transform_data'] };
+        }
+        if (task === 'medium' && tools.has('etl_batch') && next === 'parse_data') {
+          return { type: 'use_tool', name: 'etl_batch' };
+        }
+        // Default: just execute the next required operation
+        return { type: 'primitive', name: next || 'parse_data' };
+      }
+      return { type: 'primitive', name: next || 'parse_data' };
+    }
+  };
+}
+
+async function safeJson(res) {
+  const text = await res.text();
+  try { return JSON.parse(text); }
+  catch (e) { throw new Error(`Server error (${res.status}): ${text.slice(0, 120)}`); }
+}
+
+// ── Episode runner ────────────────────────────────────────────────────────────
+async function runEpisode() {
+  if (running) return;
+
+  running          = true;
+  stepCount        = 0;
+  toolUses         = 0;
+  currentSessionId = null;
+  rawCache         = {};
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="spinner"></span> RUNNING...';
+  document.getElementById('header-status-text').textContent = 'Episode Running';
+  document.getElementById('terminal').innerHTML = '';
+  document.getElementById('verdict-box').className   = 'verdict-box verdict-pending';
+  document.getElementById('verdict-box').textContent = 'Episode in progress...';
+  document.getElementById('result-stats').style.display = 'none';
+  document.getElementById('agg-section').style.display  = 'none';
+
+  document.getElementById('clean-table-area').innerHTML = `<div class="no-episode-msg">
+    <span style="font-size:16px;display:block;margin-bottom:6px;opacity:0.3">⌬</span>
+    Episode running…<br>
+    <span style="font-size:10px;opacity:0.5">Clean output will appear when done.</span>
+  </div>`;
+
+  const seed = parseInt(document.getElementById('seed-input').value) || 42;
+  initSeqViz(currentTask);
+  addTermLine(0, 'SYS', 'tag-system', `Starting  task=<span class="op">${currentTask}</span>  batch=<span class="op">${currentBatch}</span>  seed=<span class="op">${seed}</span>`);
+
+  try {
+    // CRITICAL FIX: Pass the selected batch to the backend
+    const rRes  = await fetch(`${API}/reset`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ task: currentTask, seed: seed, batch_file: currentBatch })
+    });
+    const rData = await safeJson(rRes);
+    currentSessionId = rData.session_id;
+    let obs = rData.observation;
+
+    addTermLine(0, 'SYS', 'tag-system',
+      `Session <span class="dim">${currentSessionId.slice(0,8)}…</span>  max_steps=<span class="op">${obs.max_steps}</span>`);
+    updateMetrics(obs, obs.pipeline_state || {});
+
+    const agent = buildAgent(currentTask);
+    let done = false;
+
+    while (!done) {
+      const action = agent.act(obs);
+      stepCount++;
+      if (action.type === 'use_tool') toolUses++;
+
+      const tagMap   = { primitive: 'tag-primitive', create_tool: 'tag-create', use_tool: 'tag-use' };
+      const labelMap = { primitive: 'PRIM', create_tool: 'TOOL', use_tool: 'USE' };
+
+      const sRes  = await fetch(`${API}/step?session_id=${currentSessionId}`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(action)
+      });
+      const sData = await safeJson(sRes);
+      obs  = sData.observation;
+      done = sData.done;
+      const ps = obs.pipeline_state || {};
+
+      let extra = '';
+      if (action.type === 'use_tool') {
+        extra = ` <span class="dim">→ ${obs.compression_ratio.toFixed(2)}x</span>`;
+      } else if (action.name === 'parse_data' && ps.source_file) {
+        extra = ` <span class="dim">→ ${ps.source_file}</span>`;
+      } else if (action.name === 'transform_data') {
+        const rr = ps.repair || {};
+        const n  = (rr.quantities_repaired||0)+(rr.prices_repaired||0)+(rr.statuses_repaired||0)+(rr.dates_repaired||0);
+        if (n > 0) extra = ` <span class="dim">→ repaired ${n} values</span>`;
+      }
+
+      addTermLine(
+        obs.step_count,
+        labelMap[action.type] || 'ACT',
+        tagMap[action.type]   || 'tag-system',
+        `${fmt(action)}  ${fmtR(sData.reward)}${extra}`
+      );
+      updateMetrics(obs, ps);
+      updateTools(obs.tool_registry, obs.custom_tools_defined);
+      await new Promise(r => setTimeout(r, 200));
+      if (obs.step_count >= obs.max_steps) break;
+    }
+
+    const success = obs.progress >= obs.target_length;
+    addTermLine(0, 'SYS', 'tag-system', `Complete  success=<span class="op">${success}</span>`);
+
+    // Grade
+    const gRes    = await fetch(`${API}/grade/${currentSessionId}/full`);
+    const report  = await safeJson(gRes);
+    const vbox    = document.getElementById('verdict-box');
+    vbox.className   = `verdict-box ${report.success ? 'verdict-pass' : 'verdict-fail'}`;
+    vbox.textContent = report.verdict || (report.success ? 'PASS' : 'FAIL');
+
+    const ps2 = obs.pipeline_state || {};
+    const rp  = ps2.rows_exported > 0 ? ps2.rows_exported
+              : ps2.rows_after_transform > 0 ? ps2.rows_after_transform
+              : ps2.total_rows_loaded || 0;
+
+    document.getElementById('result-stats').style.display = '';
+    document.getElementById('r-score').textContent    = (report.score || 0).toFixed(4);
+    document.getElementById('r-steps').textContent    = `${obs.step_count} / ${report.optimal_steps || '?'}`;
+    document.getElementById('r-compress').textContent = (report.compression_ratio || 0).toFixed(3) + 'x';
+    document.getElementById('r-rows').textContent     = rp;
+    document.getElementById('r-revenue').textContent  = `$${(report.revenue_total || 0).toLocaleString()}`;
+    document.getElementById('r-hash').textContent     = report.output_hash || '—';
+
+    const ar = ps2.aggregate || {};
+    if (ar.total_batches) {
+      document.getElementById('agg-section').style.display  = '';
+      document.getElementById('agg-batches').textContent    = ar.total_batches;
+      document.getElementById('agg-rows').textContent       = ar.total_rows;
+      document.getElementById('agg-product').textContent    = ar.top_product  || '—';
+      document.getElementById('agg-region').textContent     = ar.top_region   || '—';
+      document.getElementById('agg-completed').textContent  = ar.completed_pct
+        ? (ar.completed_pct * 100).toFixed(1) + '%' : '—';
+    }
+
+    // Show Data tab → clean pane with real agent output
+    switchTab('data', document.querySelector('.panel-tab'));
+    setView('clean');
+
+  } catch (err) {
+    addTermLine(0, 'ERR', 'tag-error', err.message);
+    console.error(err);
+  }
+
+  running = false;
+  btn.disabled  = false;
+  btn.innerHTML = '▶ RUN EPISODE';
+  document.getElementById('header-status-text').textContent = 'API Ready';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+initSeqViz('easy');
+buildRawBatchTabs();
+</script>
+</body>
+</html>
